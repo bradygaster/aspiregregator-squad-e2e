@@ -1,0 +1,68 @@
+@rendermode InteractiveServer
+@implements IDisposable
+@inject ISourceProvider SourceProvider
+@inject NavigationManager Nav
+@inject AppState State
+
+<div class="navmenu" style="width: 100%;">
+    <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
+    <label for="navmenu-toggle" class="navmenu-icon"><FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Fill" /></label>
+    <nav class="sitenav" aria-labelledby="main-menu">
+        <FluentNavMenu Id="main-menu" Collapsible="false" Title="Navigation menu" Expanded="true" CustomToggle="true">
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Recent</FluentNavLink>
+            @foreach (var source in (sources ?? []).Where(s => !string.IsNullOrEmpty(s.Name)))
+            {
+                <FluentNavLink Href="@string.Format($"entries/{source.GetSlug()}")" Icon="@(new Icons.Regular.Size20.Book())" IconColor="Color.Accent">
+                    <div style="display: flex;">
+                        <div style="flex-grow: 1; margin: auto;">@source.Name</div>
+                        <FluentButton IconStart="@(new Icons.Regular.Size16.Delete())"
+                                      Appearance="Appearance.Neutral"
+                                      Class="mx-05"
+                                      OnClick="@(async () => await OnDeleteSourceAsync(source))" />
+                    </div>
+                </FluentNavLink>
+            }
+        </FluentNavMenu>
+    </nav>
+</div>
+
+@code {
+    private IEnumerable<SourceItem> sources = new List<SourceItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSourcesAsync();
+
+        State.StateChanged += async () => await GetSourcesAsync();
+    }
+
+    public void Dispose()
+    {
+        State.StateChanged -= async () => await GetSourcesAsync();
+    }
+
+    internal async Task GetSourcesAsync()
+    {
+        sources = await SourceProvider.GetSourcesAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDeleteSourceAsync(SourceItem item)
+    {
+        await SourceProvider.RemoveSourceAsync(item);
+
+        // When viewing the entry, redirect to home.
+        var slug = item.GetSlug();
+        var uri = new Uri(Nav.Uri);
+        if (uri.PathAndQuery is not "/" && uri.Segments[^1] == slug)
+        {
+            Nav.NavigateTo("/");
+        }
+    }
+
+    private async Task OnUpdateAsync(SourceItem item)
+    {
+        await SourceProvider.UpdateAsync(item);
+        await GetSourcesAsync();
+    }
+}

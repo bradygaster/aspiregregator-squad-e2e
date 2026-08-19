@@ -1,0 +1,11 @@
+@rendermode InteractiveServer
+@inject AddNewFeedFormViewModel viewModel
+
+<FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Center">
+    <FluentTextField Placeholder="URL of the RSS/ATOM feed you want to add" @bind-Value="viewModel.FeedUri" Required="true" Style="min-width: 30vw;">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Globe())" Slot="start" Color="Color.Neutral" />
+    </FluentTextField>
+    <FluentButton IconStart="@(new Icons.Regular.Size16.Add())"
+                  Appearance="Appearance.Neutral"
+                  OnClick="viewModel.HandleSubmit" />
+</FluentStack>

@@ -1,0 +1,50 @@
+﻿@page "/entries/{Slug}"
+@rendermode InteractiveServer
+@inject EntriesPageViewModel viewModel
+
+<PageTitle>Entries for @viewModel.SelectedSource?.Name</PageTitle>
+
+@if (viewModel.SelectedSource is null)
+{
+    <p><em>Loading...</em></p>
+    <FluentProgressRing Width="64px"
+    Stroke="ProgressStroke.Normal"
+    Color="@(Color.Accent.ToString())" />
+}
+else
+{
+    <PageTitle>No source selected</PageTitle>
+}
+
+@if (viewModel.SelectedSource is not null)
+{
+    <h1>Entries for @viewModel.SelectedSource?.Name</h1>
+    <p>Here are the entries for the source @viewModel.SelectedSource?.Name.</p>
+
+    <EntryList EntryItems="@viewModel.SelectedSource!.MostRecentItems.AsQueryable()"/>
+}
+else
+{
+    <PageTitle>No source selected</PageTitle>
+}
+
+@code {
+
+    [Parameter]
+    public string? Slug { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Slug))
+        {
+            await viewModel.SelectSource(Slug);
+        }
+    }
+
+    private string? CleanImageUrl(string originalUrl)
+    {
+        // todo: monitor image display bugs and use this method to clean the absolute uris
+        if(originalUrl.EndsWith("mp4")) return null;
+        else return originalUrl;
+    }
+}

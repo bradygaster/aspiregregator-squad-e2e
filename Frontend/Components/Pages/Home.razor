@@ -1,0 +1,45 @@
+﻿@page "/"
+@using Humanizer
+@using Aspiregregator.Frontend.ViewModels
+@rendermode InteractiveServer
+@implements IDisposable
+@inject HomePageViewModel viewModel
+@inject AppState State
+@inject IJSRuntime JS
+
+<PageTitle>Aspiregregator</PageTitle>
+
+<h1>Recent Updates</h1>
+<p>Here is a list of recent updates across your feeds.</p>
+<EntryList EntryItems="@viewModel?.EntryItems" />
+
+<FluentButton IconStart="@(new Icons.Regular.Size20.ArrowRight())"
+              Appearance="Appearance.Accent"
+              Class="mx-05 mr-05"
+              OnClick=@LoadOlder>More</FluentButton>
+@code
+{
+    protected async Task LoadOlder()
+    {
+        viewModel.PageSize += 10;
+        await GetSourcesAsync();
+    } 
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSourcesAsync();
+
+        State.StateChanged += async () => await GetSourcesAsync();
+    }
+
+    public void Dispose()
+    {
+        State.StateChanged -= async () => await GetSourcesAsync();
+    }
+
+    internal async Task GetSourcesAsync()
+    {
+        await viewModel.RefreshAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+}

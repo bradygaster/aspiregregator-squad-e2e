@@ -1,0 +1,22 @@
+﻿@rendermode InteractiveServer
+
+@inject IJSRuntime JS
+@inject IHttpClientFactory HttpClientFactory
+
+<img src="@GetProxyImageUrl(Source)" alt="@AltText" title="@Title" class="img card-header" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Source { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string AltText { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = default!;
+
+    private string GetProxyImageUrl(string imageUrl)
+    {
+        return $"/api/proxy/image?url={Uri.EscapeDataString(imageUrl)}";
+    }
+}
