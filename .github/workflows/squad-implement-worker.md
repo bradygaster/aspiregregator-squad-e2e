@@ -201,9 +201,8 @@ safe-outputs:
     target: "*"
   dispatch-workflow:
     workflows: [squad]
-    max: 1
+    max: 2
     target-ref: ${{ github.event.repository.default_branch }}
-source: bradygaster/squad/workflows/squad-implement-worker.md@dev
 ---
 
 # Squad Implementation Worker
@@ -226,8 +225,8 @@ For a merged pull request:
    is standalone and that no further work was queued, then stop.
 4. WRITE-ONCE: call the prompt-listed `dispatch_workflow` safe-output tool
    exactly once, and only when the complete payload is ready. NEVER call
-   `dispatch_workflow` with empty, partial, or placeholder arguments to probe or discover
-   its schema. The full schema is already given in this prompt; there
+   `dispatch_workflow` with empty, partial, or placeholder arguments to probe or
+   discover its schema. The full schema is already given in this prompt; there
    is nothing to discover. If you are not ready to dispatch, or there is no next
    wave to dispatch, call `noop` instead of `dispatch_workflow`. The FIRST
    `dispatch_workflow` call wins and all later calls are silently discarded, so
