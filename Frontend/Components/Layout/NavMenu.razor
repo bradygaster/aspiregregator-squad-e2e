@@ -10,6 +10,7 @@
     <nav class="sitenav" aria-labelledby="main-menu">
         <FluentNavMenu Id="main-menu" Collapsible="false" Title="Navigation menu" Expanded="true" CustomToggle="true">
             <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Recent</FluentNavLink>
+            <FluentNavLink Href="/saved" Icon="@(new Icons.Regular.Size20.Bookmark())" IconColor="Color.Accent">Saved</FluentNavLink>
             @foreach (var source in (sources ?? []).Where(s => !string.IsNullOrEmpty(s.Name)))
             {
                 <FluentNavLink Href="@string.Format($"entries/{source.GetSlug()}")" Icon="@(new Icons.Regular.Size20.Book())" IconColor="Color.Accent">

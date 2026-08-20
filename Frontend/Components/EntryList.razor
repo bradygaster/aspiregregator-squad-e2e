@@ -1,8 +1,14 @@
-﻿@if (EntryItems is not null)
+﻿@implements IDisposable
+@inject ISourceProvider SourceProvider
+@inject AppState State
+
+@if (EntryItems is not null)
 {
     <FluentGrid AdaptiveRendering="true">
         @foreach (var item in EntryItems!)
         {
+            var isSaved = savedLinks.Contains(item.Link);
+
             <FluentCard Width="400px" Height="400px" style="margin: 10px;">
                 <FluentStack Orientation="Orientation.Vertical"
                              HorizontalAlignment="HorizontalAlignment.Left"
@@ -18,6 +24,11 @@
                         <a target="_blank" href="@item.Link">@item.Title</a>
                     </div>
                     <div>@item.GetTrimmedDescription(255)</div>
+                    <FluentButton IconStart="@(new Icons.Regular.Size16.Bookmark())"
+                                  Appearance="@(isSaved ? Appearance.Accent : Appearance.Neutral)"
+                                  OnClick="@(() => ToggleSavedAsync(item, isSaved))">
+                        @(isSaved ? "Unsave" : "Save")
+                    </FluentButton>
                 </FluentStack>
 
             </FluentCard>
@@ -28,6 +39,54 @@
 @code {
     [Parameter]
     public IQueryable<EntryItem>? EntryItems { get; set; }
+
+    private readonly HashSet<string> savedLinks = new(StringComparer.OrdinalIgnoreCase);
+    private Action? stateChangedHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stateChangedHandler = async () => await RefreshSavedLinksAsync();
+
+        await RefreshSavedLinksAsync();
+        State.StateChanged += stateChangedHandler;
+    }
+
+    public void Dispose()
+    {
+        if (stateChangedHandler is not null)
+        {
+            State.StateChanged -= stateChangedHandler;
+        }
+    }
+
+    private async Task RefreshSavedLinksAsync()
+    {
+        var savedArticles = await SourceProvider.GetSavedArticlesAsync();
+
+        savedLinks.Clear();
+        foreach (var savedArticle in savedArticles)
+        {
+            savedLinks.Add(savedArticle.Link);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleSavedAsync(EntryItem item, bool isSaved)
+    {
+        if (isSaved)
+        {
+            await SourceProvider.UnsaveArticleAsync(item.Link);
+            savedLinks.Remove(item.Link);
+        }
+        else
+        {
+            await SourceProvider.SaveArticleAsync(item);
+            savedLinks.Add(item.Link);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
 
     private string? CleanImageUrl(string originalUrl)
     {

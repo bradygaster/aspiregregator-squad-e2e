@@ -1,0 +1,39 @@
+﻿@page "/saved"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject ISourceProvider SourceProvider
+@inject AppState State
+
+<PageTitle>Saved Articles</PageTitle>
+
+<h1>Saved Articles</h1>
+<p>Here are the articles you have saved for later.</p>
+
+<EntryList EntryItems="@savedItems" />
+
+@code {
+    private IQueryable<EntryItem> savedItems = Enumerable.Empty<EntryItem>().AsQueryable();
+    private Action? stateChangedHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stateChangedHandler = async () => await GetSavedArticlesAsync();
+
+        await GetSavedArticlesAsync();
+        State.StateChanged += stateChangedHandler;
+    }
+
+    public void Dispose()
+    {
+        if (stateChangedHandler is not null)
+        {
+            State.StateChanged -= stateChangedHandler;
+        }
+    }
+
+    internal async Task GetSavedArticlesAsync()
+    {
+        savedItems = (await SourceProvider.GetSavedArticlesAsync()).AsQueryable();
+        await InvokeAsync(StateHasChanged);
+    }
+}
